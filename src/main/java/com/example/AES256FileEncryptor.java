@@ -11,6 +11,8 @@ import java.security.SecureRandom;
 import javax.swing.*;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -68,6 +70,23 @@ public class AES256FileEncryptor {
             }
         });
 
+        // 显示密码按钮
+        JButton showPasswordButton = new JButton("按住显示密码");
+        constraints.gridx = 2;
+        frame.add(showPasswordButton, constraints);
+
+        showPasswordButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                passwordField.setEchoChar((char) 0);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                passwordField.setEchoChar('*');
+            }
+        });
+
         // 确认密码标签和密码框
         JLabel confirmPasswordLabel = new JLabel("确认密码:");
         constraints.gridx = 0;
@@ -95,9 +114,27 @@ public class AES256FileEncryptor {
             }
         });
 
+        // 显示确认密码按钮
+        JButton showConfirmPasswordButton = new JButton("按住显示密码");
+        constraints.gridx = 2;
+        frame.add(showConfirmPasswordButton, constraints);
+
+        showConfirmPasswordButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                confirmPasswordField.setEchoChar((char) 0);
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                confirmPasswordField.setEchoChar('*');
+            }
+        });
+
         // 清空密码按钮
         JButton clearButton = new JButton("清空密码");
         constraints.gridx = 2;
+        constraints.gridy = 2;
         frame.add(clearButton, constraints);
 
         clearButton.addActionListener(e -> {
@@ -213,9 +250,6 @@ public class AES256FileEncryptor {
                     decryptDirectory(password, dirPath);
                     JOptionPane.showMessageDialog(frame, "解密操作成功完成。", "成功", JOptionPane.INFORMATION_MESSAGE);
                 }
-                //清除密码
-//                passwordField.setText("");
-//                confirmPasswordField.setText("");
                 resetTimer();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(frame, "发生错误: " + ex.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
@@ -236,8 +270,12 @@ public class AES256FileEncryptor {
                     SwingUtilities.invokeLater(() -> countdownLabel.setText(countdown + " 秒后自动清空密码"));
                 } else {
                     SwingUtilities.invokeLater(() -> {
-                        passwordField.setText("");
-                        confirmPasswordField.setText("");
+                        if (passwordField != null) {
+                            passwordField.setText("");
+                        }
+                        if (confirmPasswordField != null) {
+                            confirmPasswordField.setText("");
+                        }
                         countdown = 60;
                         countdownLabel.setText(countdown + " 秒后自动清空密码");
                     });
@@ -278,7 +316,7 @@ public class AES256FileEncryptor {
         processFilesRecursively(dir, keySpec, encrypt);
     }
 
-    // 递归处理目录中的文件
+    // 递序处理目录中的文件
     private static void processFilesRecursively(File dir, SecretKeySpec keySpec, boolean encrypt) throws Exception {
         for (File file : dir.listFiles()) {
             if (file.isDirectory()) {
@@ -339,10 +377,10 @@ public class AES256FileEncryptor {
             throw new IllegalArgumentException("无效的加密文件。");
         }
 
-        // 检查文件是否有加密标记
+        // 检查文件是否有加密标识
         for (int i = 0; i < ENCRYPTION_MARKER.length; i++) {
             if (fileBytes[i] != ENCRYPTION_MARKER[i]) {
-                throw new IllegalArgumentException("文件没有加密标记，无法解密。");
+                throw new IllegalArgumentException("文件没有加密标识，无法解密。");
             }
         }
 
